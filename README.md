@@ -1,5 +1,7 @@
 # Suiquid
 
+dev server: http://34.64.132.158:3000/docs
+
 ## How to connect socket.
 
 you need to get apiKey first before connect socket.io
