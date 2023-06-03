@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   ConflictException,
   Controller,
@@ -24,7 +23,6 @@ import { CreateGameDto } from './dto/create-game.dto';
 import { GameDto } from './dto/game.dto';
 import { Game } from './interface/game.interface';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { GameCreatedEvent } from './event/game-created.event';
 import { GamePlayerJoinedEvent } from './event/game-player-joined.event';
 import { GameStateEnum } from './enum/game-state.enum';
 
@@ -49,29 +47,30 @@ export class GamesController {
     description: 'Congrat!',
   })
   postGame(@Body() body: CreateGameDto) {
-    if (!body.mnemonics || !body.mnemonics.length) {
-      throw new BadRequestException(`you should give us your account!!!`);
-    }
-
-    // TODO: should we validate account or smart contract?
     if (this.gamesService.hasGameById(body.id)) {
       throw new ConflictException(`already added game: ${body.id}`);
     }
 
+    // TODO: need to validate id within smart contract
+
+    // TODO: need to get deposit from smart contract query
+    let deposit = 10000;
+
+    // TODO: need to random mnemonic
+    const mnemonics = ['apple', 'melon', 'kiwi', 'hero', 'role', 'rule'];
+
     const game: Game = {
       id: body.id,
       name: body.name,
-      mnemonics: body.mnemonics,
+      mnemonics,
       usedMnemonics: [],
       players: [],
-      deposit: body.deposit,
+      deposit,
       winningPlayer: null,
       state: GameStateEnum.PENDING,
     };
 
     this.gamesService.addGame(game);
-
-    this.eventEmitter.emit(GameCreatedEvent.name, new GameCreatedEvent(game));
   }
 
   @Get(':gameId')

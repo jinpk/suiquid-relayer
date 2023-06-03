@@ -1,16 +1,11 @@
 import { Direction } from '../enum/direction.enum';
 
-export interface PlayerMove {
+export interface GamePlay {
   x: number;
   y: number;
   direction: Direction;
-}
 
-export interface PlayerGame {
-  gameId: string;
-  move: PlayerMove;
-
-  mnemonics: string[]; // user's menmonics
+  mnemonics: string[];
 
   losedBy: string | null; // player.address
 }

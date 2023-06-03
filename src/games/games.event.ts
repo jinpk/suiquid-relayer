@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { GameCreatedEvent } from './event/game-created.event';
 import { GamesGateway } from './games.gateway';
 import { GamePlayerJoinedEvent } from './event/game-player-joined.event';
 import { GamesService } from './games.service';
@@ -13,12 +12,6 @@ export class GamesEvent {
     readonly gamesService: GamesService,
   ) {}
 
-  @OnEvent(GameCreatedEvent.name)
-  handleGameCreatedEvent(payload: GameCreatedEvent) {
-    // socket broadcast emit to all clients
-    this.gamesGateway.broadcastNewGameCreated(payload.game);
-  }
-
   @OnEvent(GamePlayerJoinedEvent.name)
   handleGamePlayerJoinedEvent(payload: GamePlayerJoinedEvent) {
     // socket broadcast emit to all clients
@@ -29,26 +22,28 @@ export class GamesEvent {
 
     // starts game when player length is reached to mnemonic length
     const game = this.gamesService.findOne(payload.gameId);
-    if (game.mnemonics.length === game.players.length) {
-      // ready first
-      game.state = GameStateEnum.READY;
+    if (game.mnemonics.length !== game.players.length) return;
+
+    // when player length reached.
+
+    // ready first
+    game.state = GameStateEnum.READY;
+    this.gamesService.set(game);
+
+    const afterStartMs = 5000;
+    this.gamesGateway.broadcastGameReady(payload.gameId, afterStartMs);
+
+    let tm = setTimeout(() => {
+      // then paying
+      game.state = GameStateEnum.PLAYING;
       this.gamesService.set(game);
 
-      const afterStartMs = 5000;
-      this.gamesGateway.broadcastGameReady(payload.gameId, afterStartMs);
+      // emit game started
+      this.gamesGateway.broadcastGameStarted(payload.gameId);
 
-      let tm = setTimeout(() => {
-        clearTimeout(tm);
-
-        game.state = GameStateEnum.PLAYING;
-        this.gamesService.set(game);
-
-        // start the game
-        this.gamesGateway.broadcastGameStarted(payload.gameId);
-
-        // call user coordnatie init
-        this.gamesService.initPlayersCoordinates(game.id);
-      }, afterStartMs);
-    }
+      // call user coordnatie init
+      this.gamesService.initPlayersCoordinates(game.id);
+      clearTimeout(tm);
+    }, afterStartMs);
   }
 }

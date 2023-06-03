@@ -22,15 +22,6 @@ you need to get apiKey first before connect socket.io
 
 broadcast from server
 
-- `created`: 새로운 게임 생성시
-
-```javascript
-// event name
-created
-// args
-1. gameId: string
-```
-
 - `joined`: 게임에 플레이어 참여시
 
 ```javascript

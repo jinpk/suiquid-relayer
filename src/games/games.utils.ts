@@ -18,4 +18,8 @@ export class GamesUtils {
 
     return menmonic;
   }
+
+  getGamePlayKeyPefix(gameId: string, playerId: string): string {
+    return gameId + '/' + playerId;
+  }
 }

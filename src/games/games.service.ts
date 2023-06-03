@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Game } from './interface/game.interface';
 import { GamesUtils } from './games.utils';
-import { gameStore } from './games.store';
+import { gamePlayStore, gameStore } from './games.store';
 import { GamesGateway } from './games.gateway';
 import { GAME_CANVAS_HEIGHT, GAME_CANVAS_WIDTH } from 'src/constants';
+import { Direction } from './enum/direction.enum';
+import { GamePlay } from './interface/game-play.interface';
 
 @Injectable()
 export class GamesService {
@@ -16,11 +18,13 @@ export class GamesService {
     const game = this.findOne(gameId);
 
     game.players.forEach((playerId) => {
-      this.gamesGateway.broadcastInitPlayerCoordinate(
+      this.gamesGateway.broadcastInitPlayer(
         game.id,
         playerId,
         Math.floor(Math.random() * (GAME_CANVAS_WIDTH - 1 + 1) + 1), // x
-        Math.floor(Math.random() * (GAME_CANVAS_HEIGHT - 1 + 1) + 1), // y
+        Math.floor(Math.random() * (GAME_CANVAS_HEIGHT - 1 + 1) + 1), // y,
+        // user initial mnemonic
+        gamePlayStore.get(playerId).mnemonics[0],
       );
     });
   }
@@ -44,7 +48,7 @@ export class GamesService {
     gameStore.set(game.id, game);
   }
 
-  join(gameId: string, playerId: string): string {
+  join(gameId: string, playerId: string) {
     const game = gameStore.get(gameId);
     if (game.mnemonics.length >= game.players.length) {
       throw `There are no seats for game: ${gameId}`;
@@ -60,7 +64,18 @@ export class GamesService {
 
     gameStore.set(gameId, game);
 
-    return menmonic;
+    const gamePlay: GamePlay = {
+      x: 0,
+      y: 0,
+      direction: Direction.BOTTOM,
+      mnemonics: [menmonic],
+      losedBy: null,
+    };
+
+    gamePlayStore.set(
+      this.gamesUtils.getGamePlayKeyPefix(game.id, playerId),
+      gamePlay,
+    );
   }
 
   hasGameById(id: string): boolean {
