@@ -63,7 +63,7 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     const client = gameClientStore.get(playerId);
     if (client) {
-      client.emit('coordinated', gameId, x, y);
+      client.emit('inited', gameId, x, y, 'haha');
     } else {
       console.log(`player ${playerId} is not connected with socket`);
     }
